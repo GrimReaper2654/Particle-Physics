@@ -5,6 +5,9 @@
  • imported functions
 - Tom Qiu
 
+08/11/2023
+ • added inner solar system
+- Tom Qiu
 
 -------------------------------------------------------------------------------------------
 */
@@ -325,14 +328,19 @@ function vMath(v1, v2, mode) {
     }
 };
 
+function mass(p) {
+    return sphereVolume(p.r*data.constants.scale)*p.p;
+}
+
 const data = {
     constants: {
         mass: 'kg',
         length: 'm',
-        edgeMode: 'void',
-        scale: 1000000,      // 1 px = x m
-        upSize: 10,          // display particles as x times larger to make them more visible
-        timeDilation: 1,   // 1 second irl = x seconds ig
+        edgeMode: 'none',
+        scale: 1000000000,   // 1 px = x m
+        upSize: 400,         // display particles as x times larger to make them more visible
+        timeDilation: 100,   // 1 second irl = x seconds ig
+        zoom: 2,             // zoom factor
         g: 0.00000000006674, // gravitation constant, source: https://en.wikipedia.org/wiki/Gravitational_constant
     },
     particlePhysics: {
@@ -357,8 +365,57 @@ const data = {
 };
 
 var particles = [];
-var particles2 = [];
-var particles3 = [];
+var gravityField = [];
+
+function gravityGrid(spacing, particle, offScreen) {
+    let gravityField = [];
+    for (let i = 0; i >= -display.x/2 - spacing*offScreen; i -= spacing) {
+        for (let j = 0; j >= -display.y/2 - spacing*offScreen; j -= spacing) {
+            particle.x = i;
+            particle.y = j;
+            particle.px = JSON.parse(JSON.stringify(i));
+            particle.py = JSON.parse(JSON.stringify(j));
+            gravityField.push(JSON.parse(JSON.stringify(particle)));
+        }
+        for (let j = 0+spacing; j <= display.y/2 + spacing*(offScreen-1); j += spacing) {
+            particle.x = i;
+            particle.y = j;
+            particle.px = JSON.parse(JSON.stringify(i));
+            particle.py = JSON.parse(JSON.stringify(j));
+            gravityField.push(JSON.parse(JSON.stringify(particle)));
+        }
+    }
+    for (let i = 0+spacing; i <= display.x/2 + spacing*(offScreen-1) ; i += spacing) {
+        for (let j = 0; j >= -display.y/2 - spacing*offScreen; j -= spacing) {
+            particle.x = i;
+            particle.y = j;
+            particle.px = JSON.parse(JSON.stringify(i));
+            particle.py = JSON.parse(JSON.stringify(j));
+            gravityField.push(JSON.parse(JSON.stringify(particle)));
+        }
+        for (let j = 0+spacing; j <= display.y/2 + spacing*(offScreen-1); j += spacing) {
+            particle.x = i;
+            particle.y = j;
+            particle.px = JSON.parse(JSON.stringify(i));
+            particle.py = JSON.parse(JSON.stringify(j));
+            gravityField.push(JSON.parse(JSON.stringify(particle)));
+        }
+    }
+    return gravityField;
+};
+
+function handleGravityField(particles) {
+    for (let i = 0; i < particles.length; i++) {
+        // This is not intended to simulate motion
+        // It is ment to show the magnitude of the force of gravity
+        //console.log(particles[i].ax, particles[i].ay);
+        particles[i].x = particles[i].ax*data.constants.scale;
+        particles[i].y = particles[i].ay*data.constants.scale;
+        particles[i].x = particles[i].px+particles[i].ax*data.constants.scale;
+        particles[i].y = particles[i].py+particles[i].ay*data.constants.scale;
+    }
+    return particles;
+};
 
 function handleParticleMotion(particles) {
     let newParticles = [];
@@ -380,6 +437,9 @@ function handleParticleMotion(particles) {
                 case 'wall':
                     particles[i].vx = -particles[i].vx;
                     break;
+                case 'none':
+                    console.log(`WARNING: object ${particles[i].id} is offscreen! (${particles[i].x}, ${particles[i].y})`);
+                    break;
                 default:
                     throw `ERROR: unknown edge type: ${data.constants.edgeMode}`;
             }
@@ -396,6 +456,9 @@ function handleParticleMotion(particles) {
                 case 'wall':
                     particles[i].vy = -particles[i].vy;
                     break;
+                case 'none':
+                    console.log(`WARNING: object ${particles[i].id} is offscreen! (${particles[i].x}, ${particles[i].y})`);
+                    break;
                 default:
                     throw `ERROR: unknown edge type: ${data.constants.edgeMode}`;
             }
@@ -407,56 +470,85 @@ function handleParticleMotion(particles) {
     return newParticles;
 };
 
-function resetAccel(particles) {
-    for (let i = 0; i < particles.length-1; i++) {
-        particles[i].ax = 0;
-        particles[i].ay = 0;
-    }
-    return particles;
-}
-
-/*
-function handleForces(particles, force, maxDist) {
-    // Every particle can exert force on every other type of particle
-    for (let i = 0; i < particles.length-1; i++) {
-        for (let j = i+1; j < particles.length; j++) {
-            console.log(particles[i].id, particles[j].id);
-            if (getDist(particles[i], particles[j]) <= maxDist) {
-                let res = force(particles[i], particles[j]);
-                particles[i] = res[0];
-                particles[j] = res[1];
-            }
-        }
-    }
-    return particles;
-};*/
-
-function handleForces(particles, force, maxDist) {
-    // Every particle can exert force on every other type of particle
+function resetPos(particles) {
     for (let i = 0; i < particles.length; i++) {
-        for (let j = 0; j < particles.length; j++) {
-            if (getDist(particles[i], particles[j]) <= maxDist && getDist(particles[i], particles[j]) > 160 && i != j) {
-                //console.log(particles[i].id, particles[j].id);
-                let res = force(particles[i], particles[j]);
-                particles[i] = res[0];
-                particles[j] = res[1];
-            }
-        }
+        particles[i].x = particles[i].px;
+        particles[i].y = particles[i].py;
     }
     return particles;
 };
 
+function resetAccel(particles) {
+    for (let i = 0; i < particles.length; i++) {
+        particles[i].ax = 0;
+        particles[i].ay = 0;
+    }
+    return particles;
+};
+
+function handleForces(effectParticles, affectedParticles, force, type) {
+    // Every particle can exert force on every other type of particle
+    //console.log(effectParticles, affectedParticles);
+    if (effectParticles==undefined) {
+        for (let i = 0; i < affectedParticles.length-1; i++) {
+            for (let j = i+1; j < affectedParticles.length; j++) {
+                if (type == 'contact') {
+                    console.log(getDist(affectedParticles[i], affectedParticles[j]), (affectedParticles[i].r + affectedParticles[j].r)*data.constants.scale);
+                    if (getDist(affectedParticles[i], affectedParticles[j]) <= (affectedParticles[i].r + affectedParticles[j].r)*data.constants.scale) {
+                        console.log('should apply contact force');
+                    }
+                }
+                //console.log(affectedParticles[i].id, affectedParticles[j].id);
+                if (type == 'contact'? getDist(affectedParticles[i], affectedParticles[j]) <= (affectedParticles[i].r + affectedParticles[j].r)*data.constants.scale : getDist(affectedParticles[i], affectedParticles[j]) > 0) {
+                    console.log(`Applying ${type} force: between ${affectedParticles[i].id} and between ${affectedParticles[j].id}`);
+                    let res = force(affectedParticles[i], affectedParticles[j]);
+                    affectedParticles[i] = res[0];
+                    affectedParticles[j] = res[1];
+                }
+            }
+        }
+    } else {
+        for (let i = 0; i < effectParticles.length; i++) {
+            for (let j = 0; j < affectedParticles.length; j++) {
+                //console.log(effectParticles[i].id, affectedParticles[j].id);
+                if (type == 'contact'? getDist(effectParticles[i], affectedParticles[j]) <= (effectParticles[i].r + affectedParticles[j].r)*data.constants.scale : getDist(effectParticles[i], affectedParticles[j]) > 0) {
+                    //console.log(`Applying ${type} force between different arrays: between ${effectParticles[i].id} and between ${affectedParticles[j].id}`);
+                    let res = force(effectParticles[i], affectedParticles[j]);
+                    affectedParticles[j] = res[1];
+                }
+            }
+        }
+    }
+    return affectedParticles;
+};
+
+function collision(p1, p2) {
+    p1.vx = (p1.vx * (mass(p1) - mass(p2)) + (2 * mass(p2) * p2.vx)) / (mass(p1) + mass(p2));
+    p1.vy = (p1.vy * (mass(p1) - mass(p2)) + (2 * mass(p2) * p2.vx)) / (mass(p1) + mass(p2));
+    p2.vx = (p2.vx * (mass(p2) - mass(p1)) + (2 * mass(p1) * p1.vx)) / (mass(p1) + mass(p2));
+    p2.vy = (p2.vy * (mass(p2) - mass(p1)) + (2 * mass(p1) * p1.vx)) / (mass(p1) + mass(p2));
+    return [p1, p2];
+};
+
 function gravity(p1, p2) {
     // f = g * (m1 * m2) / r^2
-    let f = data.constants.g * sphereVolume(p1.r*data.constants.scale)*p1.p * sphereVolume(p2.r*data.constants.scale)*p2.p / (getDist(p1, p2)*data.constants.scale)**2;
+    let f = data.constants.g * mass(p1) * mass(p2) / (getDist(p1, p2)*data.constants.scale)**2;
     // f = m * a
-    let a1 = f / (sphereVolume(p1.r*data.constants.scale)*p1.p);
-    let a2 = f / (sphereVolume(p2.r*data.constants.scale)*p2.p);
+    let a1 = f / mass(p1);
+    let a2 = f / mass(p2);
+    //console.log(f);
     //console.log(f/a1, f/a2);
     let r1 = correctAngle(aim(p1, p2));
     let r2 = correctAngle(r1+Math.PI);
+    //console.log(r1,r2);
     let va1 = {x: a1*Math.cos(r1), y: a1*Math.sin(r1)};
     let va2 = {x: a2*Math.cos(r2), y: a2*Math.sin(r2)};
+    //console.log(r1/Math.PI*180,r2/Math.PI*180);
+    if (va1.x == Infinity || va1.y == Infinity || va2.x == Infinity || va2.y == Infinity) {
+        console.log('Shit');
+        console.log(mass(p1), mass(p2), getDist(p1, p2));
+        console.log(f, a1, a2, r1, r2);
+    }
     p1.ax += va1.x;
     p1.ay += va1.y;
     p2.ax += va2.x;
@@ -467,7 +559,7 @@ function gravity(p1, p2) {
 function renderParticles(particles) {
     for (let i = 0; i < particles.length; i++) {
         //console.log(t%FPT/FPT);
-        drawCircle('main', particles[i].x-(1-(t%FPT/FPT))*particles[i].vx*data.constants.timeDilation, particles[i].y-(1-(t%FPT/FPT))*particles[i].vy*data.constants.timeDilation, particles[i].r*data.constants.upSize, toColour(particles[i].style.fill), toColour(particles[i].style.stroke.colour), particles[i].style.stroke.width, defaultCenter);
+        drawCircle('main', (particles[i].x-(1-(t%FPT/FPT))*particles[i].vx*data.constants.timeDilation)*(data.constants.zoom), (particles[i].y-(1-(t%FPT/FPT))*particles[i].vy*data.constants.timeDilation)*(data.constants.zoom), (particles[i].r*data.constants.upSize)*(data.constants.zoom), toColour(particles[i].style.fill), toColour(particles[i].style.stroke.colour), particles[i].style.stroke.width, defaultCenter);
         //drawCircle('main', particles[i].x, particles[i].y, particles[i].r*data.constants.upSize, toColour(particles[i].style.fill), toColour(particles[i].style.stroke.colour), particles[i].style.stroke.width, defaultCenter);
     }
 };
@@ -477,31 +569,24 @@ function physics() {
     //console.log(particles[1]);
     //console.log(getDist(particles[0], particles[0]));
     particles = resetAccel(particles);
-    particles = handleForces(particles, gravity, 500);
+    gravityField = resetAccel(gravityField);
+    gravityField = resetPos(gravityField);
+    //particles = handleForces(undefined, JSON.parse(JSON.stringify(particles)), collision, 'contact');
+    particles = handleForces(undefined, JSON.parse(JSON.stringify(particles)), gravity, 'non-contact');
+    gravityField = handleForces(JSON.parse(JSON.stringify(particles)), JSON.parse(JSON.stringify(gravityField)), gravity, 'non-contact');
     particles = handleParticleMotion(particles);
-
-    particles2 = resetAccel(particles2);
-    particles2 = handleForces(particles2, gravity, 100000);
-    particles2 = handleParticleMotion(particles2);
+    gravityField = handleGravityField(gravityField);
 };
 
 function graphics() {
     // draw the background
     clearCanvas('main');
     grid('main', 50, defaultCenter, {colour: 'rgba(255,255,255,0.05)', width: 2});
+    renderParticles(gravityField);
     renderParticles(particles);
-    renderParticles(particles2);
-
 };
+
 /*
-particle1.p = 5514;
-particle1.r = 6.371;
-particle1.x = 0;
-particle1.y = 0;
-particle1.vx = 0;
-particle1.id = 'earth';
-particles.push(JSON.parse(JSON.stringify(particle1)));
-*/
 let particle1 = JSON.parse(JSON.stringify(data.particlePhysics));
 particle1.p = 5514;
 particle1.r = 6.371;
@@ -533,18 +618,103 @@ particle2.y = 200;
 particles2.push(JSON.parse(JSON.stringify(particle2)));
 particles2.push(JSON.parse(JSON.stringify(particle1)));
 
-/*
-particle1.p = 3344;
-particle1.r = 1.737;
-particle1.x = 0;
-particle1.y = 384.4;
-particle1.vx = 1.023;
-particle1.id = 'moon1';
-particles.push(JSON.parse(JSON.stringify(particle1)));
-particle1.y = -384.4;
-particle1.vx = -1.023;
-particle1.id = 'moon2';
-particles.push(JSON.parse(JSON.stringify(particle1)));*/
+*/
+
+function addSolarSystem() {
+    let particle1 = JSON.parse(JSON.stringify(data.particlePhysics));
+    particle1.p = 1410;
+    particle1.r = 0.0696;
+    particle1.x = 0;
+    particle1.y = 0;
+    particle1.vx = 0;
+    particle1.id = 'Sol';
+    particle1.style.fill = {r: 255, g: 255, b: 0, a: 1};
+    particle1.style.stroke.colour = {r: 255, g: 200, b: 0, a: 1};
+    particle1.style.stroke.width = 5;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 5429;
+    particle1.r = 0.0024397;
+    particle1.x = 0;
+    particle1.y = 69.782;
+    particle1.vx = 0.04787;
+    particle1.id = 'Mercury';
+    particle1.style.fill = {r: 200, g: 200, b: 200, a: 1};
+    particle1.style.stroke.colour = {r: 180, g: 180, b: 180, a: 1};
+    particle1.style.stroke.width = 2;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 5243;
+    particle1.r = 0.006051;
+    particle1.x = 0;
+    particle1.y = 107.59;
+    particle1.vx = 0.03502;
+    particle1.id = 'Venus';
+    particle1.style.fill = {r: 255, g: 100, b: 255, a: 1};
+    particle1.style.stroke.colour = {r: 255, g: 100, b: 255, a: 1};
+    particle1.style.stroke.width = 3;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 5514;
+    particle1.r = 0.006371;
+    particle1.x = 0;
+    particle1.y = 150;
+    particle1.vx = 0.0297848;
+    particle1.id = 'Earth';
+    particle1.style.fill = {r: 0, g: 255, b: 0, a: 1};
+    particle1.style.stroke.colour = {r: 0, g: 0, b: 255, a: 1};
+    particle1.style.stroke.width = 3;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 3344;
+    particle1.r = 0.001737;
+    particle1.x = 0;
+    particle1.y = 153.844;
+    particle1.vx = 0.0297848+0.01023;
+    particle1.id = 'Moon';
+    particle1.style.fill = {r: 255, g: 255, b: 255, a: 1};
+    particle1.style.stroke.colour = {r: 255, g: 255, b: 255, a: 1};
+    particle1.style.stroke.width = 1;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 3934;
+    particle1.r = 0.003396;
+    particle1.x = 0;
+    particle1.y = 228;//228;
+    particle1.vx = 0.024077;
+    particle1.id = 'Mars';
+    particle1.style.fill = {r: 220, g: 0, b: 0, a: 1};
+    particle1.style.stroke.colour = {r: 200, g: 0, b: 0, a: 1};
+    particle1.style.stroke.width = 3;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+}
+
+function addTestingObjects() {
+    let particle1 = JSON.parse(JSON.stringify(data.particlePhysics));
+    particle1.p = 1410;
+    particle1.r = 0.0696;
+    particle1.x = -200;
+    particle1.y = 0;
+    particle1.vx = 0;
+    particle1.vy = 0.001;
+    particle1.id = 'Sol1';
+    particle1.style.fill = {r: 255, g: 255, b: 0, a: 1};
+    particle1.style.stroke.colour = {r: 255, g: 200, b: 0, a: 1};
+    particle1.style.stroke.width = 5;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+
+    particle1.p = 1410;
+    particle1.r = 0.05;
+    particle1.x = 200;
+    particle1.y = 0;
+    particle1.vx = 0;
+    particle1.vy = -0.001;
+    particle1.id = 'Sol2';
+    particle1.style.fill = {r: 255, g: 255, b: 0, a: 1};
+    particle1.style.stroke.colour = {r: 255, g: 200, b: 0, a: 1};
+    particle1.style.stroke.width = 5;
+    particles.push(JSON.parse(JSON.stringify(particle1)));
+}
 
 const TPS = 20;
 const FPS = 60;
@@ -554,8 +724,21 @@ let defaultCenter = {x: display.x/2, y: display.y/2};
 
 var t=0;
 async function game() {
+    let particle2 = JSON.parse(JSON.stringify(data.particlePhysics));
+    particle2.p = 0.1;
+    particle2.r = 0.25/data.constants.upSize;
+    particle2.style.fill = {r: 255, g: 255, b: 255, a: 1};
+    particle2.style.stroke.colour = {r: 200, g: 200, b: 200, a: 1};
+    particle2.style.stroke.width = 1;
+    gravityField = gravityGrid(20, particle2, 5);
+    addSolarSystem();
+    //addTestingObjects();
+    console.log(particles);
+    graphics();
+    await sleep(1000);
     while (1) {
         if (t%FPT == 0) {
+            //console.log(particles[0]);
             physics();
         }
         graphics();
