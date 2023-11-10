@@ -87,64 +87,67 @@ let data = {
             fill: {r: 255, g: 0, b: 0, a: 1},
             stroke: {colour: {r: 255, g: 0, b: 0, a: 1}, width: 3},
         },
+        spacer1: [
+            {type: 'label', txt: '<strong>Summon Particle Settings:</strong>'}, 
+        ],
         densityInput: [
-            {type: 'label', txt: 'Density: '}, 
+            {type: 'label', txt: 'Density:              '}, 
             {type: 'input', id: 'densityValueInput', min: 1, length: 8, placeholder: "1.000", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'densityExponentInput', min: -5, length: 1, placeholder: "3", disabled: ''}, 
-            {type: 'label', txt: 'kg m³'}, 
+            {type: 'input', id: 'densityExponentInput', min: -5, length: 2, placeholder: "3", disabled: ''}, 
+            {type: 'label', txt: ' kg m³'}, 
         ],
         radiusInput: [
-            {type: 'label', txt: 'Radius: '}, 
+            {type: 'label', txt: 'Radius:               '}, 
             {type: 'input', id: 'radiusValueInput', min: 1, length: 8, placeholder: "6.000", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'radiusExponentInput', min: 0, length: 1, placeholder: "5", disabled: ''}, 
-            {type: 'label', txt: 'm'}, 
+            {type: 'input', id: 'radiusExponentInput', min: 0, length: 2, placeholder: "5", disabled: ''}, 
+            {type: 'label', txt: ' m'}, 
         ],
-        spacer: [
-            {type: 'label', txt: '<strong>Constant Inputs</strong>'}, 
+        spacer2: [
+            {type: 'label', txt: '<strong>Constant Inputs:</strong>'}, 
         ],
         scaleInput: [
-            {type: 'label', txt: 'Scale Factor: '}, 
+            {type: 'label', txt: 'Scale Factor:         '}, 
             {type: 'input', id: 'scaleValueInput', min: 1, length: 8, placeholder: "1.000", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
             {type: 'input', id: 'scaleExponentInput', min: 0, length: 2, placeholder: "9", disabled: ''}, 
             {type: 'label', txt: ' times larger'}, 
         ],
         upSizeInput: [
-            {type: 'label', txt: 'Up Size: '}, 
-            {type: 'input', id: 'upSizeValueInput', min: 1, length: 3, placeholder: "400", disabled: ''}, 
+            {type: 'label', txt: 'Up Size:              '}, 
+            {type: 'input', id: 'upSizeValueInput', min: 1, length: 8, placeholder: "400", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'upSizeExponentInput', min: 0, length: 1, placeholder: "0", disabled: 'disable'}, 
-            {type: 'label', txt: 'times larger'}, 
+            {type: 'input', id: 'upSizeExponentInput', min: 0, length: 2, placeholder: "0", disabled: 'disable'}, 
+            {type: 'label', txt: ' times larger'}, 
         ],
         timeDilationInput: [
-            {type: 'label', txt: 'Time Dilation: '}, 
+            {type: 'label', txt: 'Time Dilation:        '}, 
             {type: 'input', id: 'timeDilationValueInput', min: 0.001, length: 4, placeholder: "100", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'timeDilationExponentInput', min: 0, length: 1, placeholder: "0", disabled: 'disable'}, 
-            {type: 'label', txt: 'times faster'}, 
+            {type: 'input', id: 'timeDilationExponentInput', min: 0, length: 2, placeholder: "0", disabled: 'disable'}, 
+            {type: 'label', txt: ' times faster'}, 
         ],
         zoomInput: [
-            {type: 'label', txt: 'Zoom: '}, 
-            {type: 'input', id: 'zoomValueInput', min: 1, length: 3, placeholder: "2", disabled: ''}, 
+            {type: 'label', txt: 'Zoom:                 '}, 
+            {type: 'input', id: 'zoomValueInput', min: 1, length: 8, placeholder: "2", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'zoomExponentInput', min: 0, length: 1, placeholder: "2", disabled: 'disable'}, 
-            {type: 'label', txt: '%'}, 
+            {type: 'input', id: 'zoomExponentInput', min: 0, length: 2, placeholder: "2", disabled: 'disable'}, 
+            {type: 'label', txt: ' %'}, 
         ],
         collisionDampeningInput: [
-            {type: 'label', txt: 'Energy Conservation: '}, 
-            {type: 'input', id: 'collisionDampeningValueInput', min: 1, length: 2, placeholder: "1", disabled: 'disable'}, 
+            {type: 'label', txt: 'Collision Efficiency: '}, 
+            {type: 'input', id: 'collisionDampeningValueInput', min: 1, length: 8, placeholder: "1", disabled: 'disable'}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'collisionDampeningExponentInput', min: 0, length: 1, placeholder: "2", disabled: 'disable'}, 
-            {type: 'label', txt: '%'}, 
+            {type: 'input', id: 'collisionDampeningExponentInput', min: 0, length: 2, placeholder: "2", disabled: 'disable'}, 
+            {type: 'label', txt: ' %'}, 
         ],
         camSpeedInput: [
-            {type: 'label', txt: 'Pan Speed: '}, 
-            {type: 'input', id: 'camSpeedValueInput', min: 1, length: 2, placeholder: "5", disabled: ''}, 
+            {type: 'label', txt: 'Pan Speed:            '}, 
+            {type: 'input', id: 'camSpeedValueInput', min: 1, length: 8, placeholder: "5", disabled: ''}, 
             {type: 'label', txt: '×10^'}, 
-            {type: 'input', id: 'camSpeedExponentInput', min: 0, length: 1, placeholder: "0", disabled: 'disable'}, 
-            {type: 'label', txt: 'px/tick'}, 
+            {type: 'input', id: 'camSpeedExponentInput', min: 0, length: 2, placeholder: "0", disabled: 'disable'}, 
+            {type: 'label', txt: ' px/tick'}, 
         ],
         interactInputs: [
             'density',
@@ -259,11 +262,11 @@ function stack(element) {
 
 function createInput(elements) {
     var overlay = document.getElementById("overlay");
-    let content = `<form>`;
+    let content = `<form><pre>`;
     for (let i=0; i < elements.length; i++) {
         content += stack(elements[i]);
     }
-    content += `</form>`;
+    content += `</pre></form>`;
     overlay.innerHTML += content;
     for (let i=0; i < elements.length; i++) {
         if (elements[i].type == 'input') {
@@ -1164,10 +1167,11 @@ let camPos = {x: 0, y: 0};
 
 var t=0;
 async function game() {
+    createInput(data.storage.spacer1);
     for (let i=0; i < data.storage.interactInputs.length; i++) {
         createInput(data.storage[`${data.storage.interactInputs[i]}Input`]);
     }
-    createInput(data.storage.spacer);
+    createInput(data.storage.spacer2);
     for (let i=0; i < data.storage.constantInputs.length; i++) {
         createInput(data.storage[`${data.storage.constantInputs[i]}Input`]);
     }
